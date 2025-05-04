@@ -6,6 +6,30 @@ const dragging = ref(null);
 
 const circle1 = ref({ x: 50, y: 150 });
 
+// GREEN CIRCLES
+const green_count = ref(1);
+const green_circles = ref([{ x: 50, y: 150 }]);
+
+function removeGreenCircle() {
+  green_count.value--;
+  green_circles.value.pop();
+}
+
+function addGreenCircle() {
+  green_count.value++;
+  let new_circle = JSON.parse(JSON.stringify(green_circles.value.at(-1)));
+  new_circle.y += 100;
+  green_circles.value.push(new_circle);
+}
+
+const disableGreenAddButton = computed(() => {
+  return !(green_count.value < 4);
+});
+
+const disableGreenDeleteButton = computed(() => {
+  return !(green_count.value > 1);
+});
+
 // RED CIRCLE (ADD/REMOVE LOGIC)
 const red_count = ref(2);
 const red_circles = ref([
@@ -25,16 +49,17 @@ function addRedCircle() {
   red_circles.value.push(new_circle);
 }
 
-const disableAddButton = computed(() => {
-  return !(red_count.value < 5);
+const disableRedAddButton = computed(() => {
+  return !(red_count.value < 4);
 });
-const disableDeleteButton = computed(() => {
+const disableRedDeleteButton = computed(() => {
   return !(red_count.value > 1);
 });
 
 //DRAGGING LOGIC
 function startDrag(event, id) {
-  const circle = id === -1 ? circle1.value : red_circles.value[id];
+  const circle =
+    id < 0 ? green_circles.value[-(id + 1)] : red_circles.value[id];
   const offsetX = event.clientX - circle.x;
   const offsetY = event.clientY - circle.y;
 
@@ -48,8 +73,8 @@ function onMouseMove(event) {
   const newX = event.clientX - offsetX;
   const newY = event.clientY - offsetY;
 
-  if (id === -1) {
-    circle1.value = { x: newX, y: newY };
+  if (id < 0) {
+    green_circles.value[-(id + 1)] = { x: newX, y: newY };
   } else {
     red_circles.value[id] = { x: newX, y: newY };
   }
@@ -64,22 +89,23 @@ const isTouching = computed(() => {
   const r = RADIUS / 2;
 
   //green circle
-  const center_x_1 = circle1.value.x + r;
-  const center_y_1 = circle1.value.y + r;
 
   //red circles
-  for (let rc of red_circles.value) {
-    const center_x_2 = rc.x + r;
-    const center_y_2 = rc.y + r;
+  for (let gc of green_circles.value) {
+    const center_x_1 = gc.x + r;
+    const center_y_1 = gc.y + r;
+    for (let rc of red_circles.value) {
+      const center_x_2 = rc.x + r;
+      const center_y_2 = rc.y + r;
 
-    const dx = center_x_1 - center_x_2;
-    const dy = center_y_1 - center_y_2;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    if (distance < RADIUS) {
-      return true;
+      const dx = center_x_1 - center_x_2;
+      const dy = center_y_1 - center_y_2;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      if (distance < RADIUS) {
+        return true;
+      }
     }
   }
-
   return false;
 });
 </script>
@@ -92,27 +118,38 @@ const isTouching = computed(() => {
       </div>
       <div>
         <button
-          :disabled="disableAddButton"
+          :disabled="disableRedAddButton"
           class="addButton"
           @click="addRedCircle()"
         >
-          Add Circle
+          Add Red Circle
         </button>
-        <button :disabled="disableDeleteButton" @click="removeRedCircle()">
-          Remove Circle
+        <button :disabled="disableRedDeleteButton" @click="removeRedCircle()">
+          Remove Red Circle
+        </button>
+      </div>
+      <div>
+        <button
+          :disabled="disableGreenAddButton"
+          class="addButton"
+          @click="addGreenCircle()"
+        >
+          Add Green Circle
+        </button>
+        <button
+          :disabled="disableGreenDeleteButton"
+          @click="removeGreenCircle()"
+        >
+          Remove Green Circle
         </button>
       </div>
     </div>
     <div
       class="circle"
-      :style="{
-        left: circle1.x + 'px',
-        top: circle1.y + 'px',
-        zIndex: 1
-      }"
-      @mousedown="startDrag($event, -1)"
+      v-for="(gcirc, index) in green_circles"
+      :style="{ left: gcirc.x + 'px', top: gcirc.y + 'px', zIndex: 1 }"
+      @mousedown="startDrag($event, -1 * index - 1)"
     ></div>
-
     <!-- Red circles loop to show all circles -->
     <div
       class="circle circle2"
