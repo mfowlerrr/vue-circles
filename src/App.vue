@@ -6,6 +6,7 @@ const dragging = ref(null);
 
 const circle1 = ref({ x: 50, y: 150 });
 
+// RED CIRCLE (ADD/REMOVE LOGIC)
 const red_count = ref(2);
 const red_circles = ref([
   { x: 200, y: 150 },
@@ -31,6 +32,7 @@ const disableDeleteButton = computed(() => {
   return !(red_count.value > 1);
 });
 
+//DRAGGING LOGIC
 function startDrag(event, id) {
   const circle = id === -1 ? circle1.value : red_circles.value[id];
   const offsetX = event.clientX - circle.x;
@@ -57,6 +59,7 @@ function stopDrag() {
   dragging.value = null;
 }
 
+// touching logic
 const isTouching = computed(() => {
   const r = RADIUS / 2;
 
@@ -65,9 +68,9 @@ const isTouching = computed(() => {
   const center_y_1 = circle1.value.y + r;
 
   //red circles
-  for (let c of red_circles.value) {
-    const center_x_2 = c.x + r;
-    const center_y_2 = c.y + r;
+  for (let rc of red_circles.value) {
+    const center_x_2 = rc.x + r;
+    const center_y_2 = rc.y + r;
 
     const dx = center_x_1 - center_x_2;
     const dy = center_y_1 - center_y_2;
@@ -79,32 +82,26 @@ const isTouching = computed(() => {
 
   return false;
 });
-
-//Implementation of higher Z index for the grabbed circle
-// const circle1ZIndex = computed(() =>
-//   dragging.value && dragging.value.id === -1 ? 10 : 1
-// );
-// const circle2ZIndex = computed(() =>
-//   dragging.value && dragging.value.id === 2 ? 10 : 1
-// );
 </script>
 
 <template>
   <div id="app" @mousemove="onMouseMove" @mouseup="stopDrag">
     <div class="indicator">
-      <div>
+      <div style="margin-bottom: 10px">
         Green is {{ isTouching ? "touching" : "not touching" }} a red circle
       </div>
-      <button
-        :disabled="disableAddButton"
-        class="addButton"
-        @click="addRedCircle()"
-      >
-        Add Circle
-      </button>
-      <button :disabled="disableDeleteButton" @click="removeRedCircle()">
-        Remove Circle
-      </button>
+      <div>
+        <button
+          :disabled="disableAddButton"
+          class="addButton"
+          @click="addRedCircle()"
+        >
+          Add Circle
+        </button>
+        <button :disabled="disableDeleteButton" @click="removeRedCircle()">
+          Remove Circle
+        </button>
+      </div>
     </div>
     <div
       class="circle"
